@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:teleprompter_camera_app/components/CreateScript.dart';
 import 'package:teleprompter_camera_app/components/Script.dart';
 import 'package:teleprompter_camera_app/components/Record.dart';
 
@@ -11,21 +12,49 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedPage = 0;
-
-  final List<Widget> _pages = const [Record(), Script()];
-
-  //final List<String> _titles = const ['Record', 'Scripts'];
+  final GlobalKey<NavigatorState> _scriptNavigatorKey =
+      GlobalKey<NavigatorState>();
 
   void _onItemTapped(int index) {
+    if (_selectedPage == 1 && index != 1) {
+      _scriptNavigatorKey.currentState?.popUntil((route) => route.isFirst);
+    }
     setState(() {
       _selectedPage = index;
     });
   }
 
+  Route<dynamic> _scriptRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case '/create':
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (context) => const Createscript(),
+        );
+
+      default:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (context) => const Script(),
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _selectedPage, children: _pages),
+      body: IndexedStack(
+        index: _selectedPage,
+        children: [
+          const Record(),
+          Navigator(
+            key: _scriptNavigatorKey,
+            initialRoute: '/',
+            onGenerateRoute: _scriptRoute,
+          ),
+        ],
+      ),
+
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(

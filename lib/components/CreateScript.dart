@@ -30,7 +30,7 @@ class Createscript extends StatelessWidget {
         ),
       ),
 
-      body: Center(child: Text("Create Script Page")),
+      body: Center(child: Text("You can create a new Script here")),
     );
   }
 }

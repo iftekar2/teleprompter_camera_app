@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:teleprompter_camera_app/components/CreateScript.dart';
 
 class Script extends StatefulWidget {
   const Script({super.key});
@@ -24,10 +23,7 @@ class _ScriptState extends State<Script> {
 
           child: OutlinedButton(
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => Createscript()),
-              );
+              Navigator.of(context).pushNamed('/create');
             },
 
             child: const Text(
