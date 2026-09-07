@@ -12,8 +12,19 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedPage = 0;
+  String? _activeScriptTitle;
+  String? _activeScriptContent;
   final GlobalKey<NavigatorState> _scriptNavigatorKey =
       GlobalKey<NavigatorState>();
+
+  void _useScriptInRecording(String title, String script) {
+    setState(() {
+      _activeScriptTitle = title;
+      _activeScriptContent = script;
+      _selectedPage = 0;
+    });
+    _scriptNavigatorKey.currentState?.popUntil((route) => route.isFirst);
+  }
 
   void _onItemTapped(int index) {
     if (_selectedPage == 1 && index != 1) {
@@ -29,7 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
       case '/create':
         return MaterialPageRoute(
           settings: settings,
-          builder: (context) => const Createscript(),
+          builder: (context) => Createscript(
+            onUseInRecording: _useScriptInRecording,
+          ),
         );
 
       default:
@@ -46,7 +59,10 @@ class _HomeScreenState extends State<HomeScreen> {
       body: IndexedStack(
         index: _selectedPage,
         children: [
-          const Record(),
+          Record(
+            title: _activeScriptTitle,
+            script: _activeScriptContent,
+          ),
           Navigator(
             key: _scriptNavigatorKey,
             initialRoute: '/',
