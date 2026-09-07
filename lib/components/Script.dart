@@ -1,37 +1,141 @@
 import 'package:flutter/material.dart';
+import 'package:teleprompter_camera_app/models/script_model.dart';
 
-class Script extends StatefulWidget {
-  const Script({super.key});
+class Script extends StatelessWidget {
+  final List<ScriptModel> scripts;
+  final VoidCallback onNewScript;
+  final void Function(ScriptModel script) onEdit;
+  final void Function(String id) onDelete;
 
-  @override
-  State<Script> createState() => _ScriptState();
-}
+  const Script({
+    super.key,
+    required this.scripts,
+    required this.onNewScript,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
-class _ScriptState extends State<Script> {
+  Future<void> _confirmDelete(BuildContext context, ScriptModel script) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete script?'),
+        content: Text('Delete "${script.title}"? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      onDelete(script.id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Script", style: TextStyle(fontWeight: FontWeight.w600)),
+        title: const Text(
+          'Script',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         backgroundColor: Colors.white,
       ),
-
-      body: Center(
-        child: SizedBox(
-          height: 60,
-          width: 250,
-
-          child: OutlinedButton(
-            onPressed: () {
-              Navigator.of(context).pushNamed('/create');
-            },
-
-            child: const Text(
-              '+ New Script',
-              style: TextStyle(color: Colors.black, fontSize: 18),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+            child: SizedBox(
+              height: 60,
+              child: OutlinedButton(
+                onPressed: onNewScript,
+                child: const Text(
+                  '+ New Script',
+                  style: TextStyle(color: Colors.black, fontSize: 18),
+                ),
+              ),
             ),
           ),
-        ),
+          Expanded(
+            child: scripts.isEmpty
+                ? Center(
+                    child: Text(
+                      'No scripts yet',
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 16,
+                      ),
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    itemCount: scripts.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final script = scripts[index];
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              script.title,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              script.content,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade600,
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                IconButton(
+                                  onPressed: () => onEdit(script),
+                                  icon: const Icon(Icons.edit_outlined),
+                                  color: Colors.black,
+                                  tooltip: 'Edit',
+                                ),
+                                IconButton(
+                                  onPressed: () =>
+                                      _confirmDelete(context, script),
+                                  icon: const Icon(Icons.delete_outline),
+                                  color: Colors.red,
+                                  tooltip: 'Delete',
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }

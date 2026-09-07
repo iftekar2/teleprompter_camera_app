@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:teleprompter_camera_app/models/script_model.dart';
 
 class Createscript extends StatefulWidget {
+  final ScriptModel? initialScript;
   final void Function(String title, String script)? onUseInRecording;
 
-  const Createscript({super.key, this.onUseInRecording});
+  const Createscript({super.key, this.initialScript, this.onUseInRecording});
 
   @override
   State<Createscript> createState() => _CreatescriptState();
@@ -20,6 +22,12 @@ class _CreatescriptState extends State<Createscript> {
     super.initState();
     _titleController.addListener(_validateForm);
     _scriptController.addListener(_validateForm);
+
+    if (widget.initialScript != null) {
+      _titleController.text = widget.initialScript!.title;
+      _scriptController.text = widget.initialScript!.content;
+      _validateForm();
+    }
   }
 
   void _validateForm() {
@@ -157,6 +165,7 @@ class _CreatescriptState extends State<Createscript> {
                           size: 28,
                           color: buttonColor,
                         ),
+
                         const SizedBox(width: 10),
                         Text(
                           "Use in recording",

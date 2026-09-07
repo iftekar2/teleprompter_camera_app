@@ -36,18 +36,19 @@ class Record extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Padding(
-            //   padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-            //   child: Text(
-            //     title!,
-            //     textAlign: TextAlign.center,
-            //     style: const TextStyle(
-            //       color: Colors.black,
-            //       fontSize: 16,
-            //       fontWeight: FontWeight.w500,
-            //     ),
-            //   ),
-            // ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+              child: Text(
+                title!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
