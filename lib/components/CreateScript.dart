@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class Createscript extends StatelessWidget {
   const Createscript({super.key});
@@ -90,6 +91,32 @@ class Createscript extends StatelessWidget {
                   ),
 
                   style: TextStyle(fontSize: 20, color: Colors.black),
+                ),
+              ),
+
+              SizedBox(height: 20),
+              SizedBox(
+                height: 60,
+                child: OutlinedButton(
+                  onPressed: () {},
+
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.video_camera_front_outlined,
+                          size: 28,
+                          color: Colors.black,
+                        ),
+                        SizedBox(width: 10),
+                        Text(
+                          "Use in recording",
+                          style: TextStyle(fontSize: 20, color: Colors.black),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
