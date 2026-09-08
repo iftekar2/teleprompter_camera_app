@@ -65,6 +65,7 @@ class Script extends StatelessWidget {
               ),
             ),
           ),
+
           Expanded(
             child: scripts.isEmpty
                 ? Center(
@@ -82,54 +83,65 @@ class Script extends StatelessWidget {
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final script = scripts[index];
-                      return Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              script.title,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
+                      return InkWell(
+                        onTap: () =>
+                            onEdit(script), // Tapping card opens edit view
+                        borderRadius: BorderRadius.circular(24),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(
+                              24,
+                            ), // Extra rounded corners
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Left Content: Title + Single Line Preview
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      script.title,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      script.content,
+                                      maxLines:
+                                          1, // Matches screenshot single-line truncation
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(width: 12),
+
+                              // Right Action: Trash Icon
+                              IconButton(
+                                onPressed: () =>
+                                    _confirmDelete(context, script),
+                                icon: const Icon(Icons.delete_outline),
                                 color: Colors.black,
+                                tooltip: 'Delete',
+                                iconSize: 30,
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              script.content,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade600,
-                                height: 1.4,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                IconButton(
-                                  onPressed: () => onEdit(script),
-                                  icon: const Icon(Icons.edit_outlined),
-                                  color: Colors.black,
-                                  tooltip: 'Edit',
-                                ),
-                                IconButton(
-                                  onPressed: () =>
-                                      _confirmDelete(context, script),
-                                  icon: const Icon(Icons.delete_outline),
-                                  color: Colors.red,
-                                  tooltip: 'Delete',
-                                ),
-                              ],
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       );
                     },

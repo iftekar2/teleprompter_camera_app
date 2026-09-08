@@ -16,14 +16,14 @@ class Record extends StatelessWidget {
 
     if (!hasScript) {
       return const Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.white,
         body: Center(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 32),
             child: Text(
               'Create a script to start recording.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70, fontSize: 18),
+              style: TextStyle(color: Colors.black, fontSize: 18),
             ),
           ),
         ),
