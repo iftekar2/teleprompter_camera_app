@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 
-      title: 'Teleprompter App',
+      title: 'Pace',
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: Colors.white,
