@@ -6,6 +6,10 @@
 	<string>Camera access is required to record video.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone access is required to record audio.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Photo Library access is required to save recorded videos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo Library access is required to save recorded videos.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

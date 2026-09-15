@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:gal/gal.dart';
 
 class Record extends StatefulWidget {
   final String? title;
@@ -26,9 +27,12 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
   Timer? _scrollTimer;
   double _scrollSpeed = 30.0; // pixels per second
   double _fontSize = 28.0;
+  double _overlayOpacity = 0.0; // 0.0 (clear unmasked camera), 0.25 (subtle), 0.5 (dark)
 
   // Recording logic
   bool _isRecording = false;
+  bool _isRecordingProcessing = false;
+  bool _isSavingVideo = false;
   int _recordingSeconds = 0;
   Timer? _recordingTimer;
 
@@ -59,7 +63,7 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
     final CameraController? cameraController = _cameraController;
     if (cameraController == null || !cameraController.value.isInitialized) {
       return;
@@ -68,10 +72,27 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
     if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
       _stopAutoScroll();
       _stopRecordingTimer();
-      cameraController.dispose();
-      setState(() {
-        _isCameraInitialized = false;
-      });
+
+      if (cameraController.value.isRecordingVideo) {
+        try {
+          final video = await cameraController.stopVideoRecording();
+          await Gal.putVideo(video.path);
+        } catch (e) {
+          debugPrint('Failed to save recording on app pause: $e');
+        }
+      }
+
+      await cameraController.dispose();
+      _cameraController = null;
+
+      if (mounted) {
+        setState(() {
+          _isRecording = false;
+          _isCameraInitialized = false;
+          _isRecordingProcessing = false;
+          _isSavingVideo = false;
+        });
+      }
     } else if (state == AppLifecycleState.resumed) {
       if (_hasScript) {
         _initCamera(cameraIndex: _selectedCameraIndex);
@@ -121,6 +142,14 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
       _cameraController = controller;
       await controller.initialize();
 
+      try {
+        await controller.setFocusMode(FocusMode.auto);
+        await controller.setExposureMode(ExposureMode.auto);
+      } catch (e) {
+        // Some camera hardware might not support focus/exposure mode configuration
+        debugPrint('Focus/Exposure mode configuration warning: $e');
+      }
+
       if (!mounted) return;
 
       setState(() {
@@ -149,6 +178,18 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
     });
 
     await _initCamera(cameraIndex: nextIndex);
+  }
+
+  void _toggleOverlayOpacity() {
+    setState(() {
+      if (_overlayOpacity == 0.0) {
+        _overlayOpacity = 0.25;
+      } else if (_overlayOpacity == 0.25) {
+        _overlayOpacity = 0.50;
+      } else {
+        _overlayOpacity = 0.0;
+      }
+    });
   }
 
   void _toggleAutoScroll() {
@@ -200,54 +241,129 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
 
   Future<void> _toggleVideoRecording() async {
     final controller = _cameraController;
-    if (controller == null || !controller.value.isInitialized) return;
+    if (controller == null || !controller.value.isInitialized || _isRecordingProcessing) return;
 
-    if (_isRecording) {
-      try {
-        final video = await controller.stopVideoRecording();
-        _stopRecordingTimer();
+    setState(() {
+      _isRecordingProcessing = true;
+    });
+
+    try {
+      final isCurrentlyRecording = controller.value.isRecordingVideo || _isRecording;
+
+      if (isCurrentlyRecording) {
+        // Enforce a brief delay for very short recordings to avoid native camera driver errors
+        if (_recordingSeconds == 0) {
+          await Future.delayed(const Duration(milliseconds: 500));
+        }
+
         setState(() {
-          _isRecording = false;
+          _isSavingVideo = true;
         });
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Video saved: ${video.name}'),
-              duration: const Duration(seconds: 4),
-              action: SnackBarAction(
-                label: 'OK',
-                onPressed: () {},
+            const SnackBar(
+              content: Row(
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Text('Saving video to Photos...'),
+                ],
               ),
+              duration: Duration(seconds: 2),
             ),
           );
         }
-      } catch (e) {
+
+        XFile? video;
+        try {
+          video = await controller.stopVideoRecording();
+        } catch (e) {
+          debugPrint('Error stopping video recording: $e');
+        }
+
+        _stopRecordingTimer();
+        _stopAutoScroll();
+
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to stop recording: $e')),
-          );
+          setState(() {
+            _isRecording = false;
+          });
+        }
+
+        if (video != null) {
+          try {
+            await Gal.putVideo(video.path);
+            if (mounted) {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('🎉 Video saved to your Photos!'),
+                  duration: Duration(seconds: 4),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Video recorded, but failed to save to Photos: $e'),
+                  duration: const Duration(seconds: 5),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Failed to stop recording cleanly.'),
+                duration: Duration(seconds: 4),
+              ),
+            );
+          }
+        }
+      } else {
+        await controller.startVideoRecording();
+        if (mounted) {
+          setState(() {
+            _isRecording = true;
+            _recordingSeconds = 0;
+          });
+          _startRecordingTimer();
+
+          // Auto-start scrolling when recording starts if not already scrolling
+          if (!_isScrolling) {
+            _toggleAutoScroll();
+          }
         }
       }
-    } else {
-      try {
-        await controller.startVideoRecording();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to start recording: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
         setState(() {
-          _isRecording = true;
-          _recordingSeconds = 0;
+          _isRecordingProcessing = false;
+          _isSavingVideo = false;
+          if (controller.value.isInitialized) {
+            _isRecording = controller.value.isRecordingVideo;
+          }
         });
-        _startRecordingTimer();
-
-        // Also auto-start scrolling when recording starts if not already scrolling
-        if (!_isScrolling) {
-          _toggleAutoScroll();
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to start recording: $e')),
-          );
-        }
       }
     }
   }
@@ -312,12 +428,13 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
               child: _buildCameraPreview(),
             ),
 
-            // 2. Translucent Overlay for High Contrast Text Readability
-            Positioned.fill(
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.35),
+            // 2. Optional Translucent Overlay for High Contrast Text Readability
+            if (_overlayOpacity > 0.0)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withValues(alpha: _overlayOpacity),
+                ),
               ),
-            ),
 
             // 3. Main Content Layer (Header, Script, Controls)
             Column(
@@ -344,7 +461,12 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
                         shadows: const [
                           Shadow(
                             offset: Offset(0, 2),
-                            blurRadius: 6,
+                            blurRadius: 8,
+                            color: Colors.black,
+                          ),
+                          Shadow(
+                            offset: Offset(0, 0),
+                            blurRadius: 4,
                             color: Colors.black87,
                           ),
                         ],
@@ -407,13 +529,17 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
     }
 
     if (_isCameraInitialized && _cameraController != null) {
+      final mediaSize = MediaQuery.of(context).size;
+      final cameraAspectRatio = _cameraController!.value.aspectRatio;
+
+      var scale = mediaSize.aspectRatio * cameraAspectRatio;
+      if (scale < 1) scale = 1 / scale;
+
       return ClipRect(
         child: SizedBox.expand(
-          child: FittedBox(
-            fit: BoxFit.cover,
-            child: SizedBox(
-              width: _cameraController!.value.previewSize?.height ?? 100,
-              height: _cameraController!.value.previewSize?.width ?? 100,
+          child: Transform.scale(
+            scale: scale,
+            child: Center(
               child: CameraPreview(_cameraController!),
             ),
           ),
@@ -523,6 +649,21 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
                 },
               ),
 
+              // Text Backdrop Contrast Dimmer
+              IconButton(
+                icon: Icon(
+                  _overlayOpacity == 0.0
+                      ? Icons.tonality_outlined
+                      : _overlayOpacity == 0.25
+                          ? Icons.tonality
+                          : Icons.brightness_medium,
+                  color: _overlayOpacity > 0.0 ? Colors.amber : Colors.white,
+                ),
+                tooltip:
+                    'Text Contrast Overlay (${(_overlayOpacity * 100).toInt()}%)',
+                onPressed: _toggleOverlayOpacity,
+              ),
+
               // Scroll Speed Controller
               InkWell(
                 onTap: () {
@@ -562,28 +703,40 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
 
               // Record Video Shutter Button
               GestureDetector(
-                onTap: _toggleVideoRecording,
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                  ),
-                  child: Center(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: _isRecording ? 18 : 28,
-                      height: _isRecording ? 18 : 28,
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: _isRecording
-                            ? BoxShape.rectangle
-                            : BoxShape.circle,
-                        borderRadius: _isRecording
-                            ? BorderRadius.circular(4)
-                            : null,
-                      ),
+                onTap: _isRecordingProcessing ? null : _toggleVideoRecording,
+                child: Opacity(
+                  opacity: _isRecordingProcessing ? 0.6 : 1.0,
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                    ),
+                    child: Center(
+                      child: _isSavingVideo
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: _isRecording ? 18 : 28,
+                              height: _isRecording ? 18 : 28,
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                shape: _isRecording
+                                    ? BoxShape.rectangle
+                                    : BoxShape.circle,
+                                borderRadius: _isRecording
+                                    ? BorderRadius.circular(4)
+                                    : null,
+                              ),
+                            ),
                     ),
                   ),
                 ),
