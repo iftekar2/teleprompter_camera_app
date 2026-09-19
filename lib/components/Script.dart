@@ -136,7 +136,6 @@ class Script extends StatelessWidget {
 
                                 const SizedBox(width: 12),
 
-                                // Right Action: Trash Icon
                                 IconButton(
                                   onPressed: () =>
                                       _confirmDelete(context, script),
