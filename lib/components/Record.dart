@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
+import 'package:teleprompter_camera_app/components/record/record_components.dart';
 
 class Record extends StatefulWidget {
   final String? title;
@@ -188,6 +189,26 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
         _overlayOpacity = 0.50;
       } else {
         _overlayOpacity = 0.0;
+      }
+    });
+  }
+
+  void _toggleFontSize() {
+    setState(() {
+      if (_fontSize >= 40.0) {
+        _fontSize = 20.0;
+      } else {
+        _fontSize += 4.0;
+      }
+    });
+  }
+
+  void _toggleScrollSpeed() {
+    setState(() {
+      if (_scrollSpeed >= 70.0) {
+        _scrollSpeed = 15.0;
+      } else {
+        _scrollSpeed += 15.0;
       }
     });
   }
@@ -425,7 +446,13 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
           children: [
             // 1. Camera Live Feed Background
             Positioned.fill(
-              child: _buildCameraPreview(),
+              child: CameraPreviewView(
+                controller: _cameraController,
+                isInitializing: _isCameraInitializing,
+                isInitialized: _isCameraInitialized,
+                errorMessage: _cameraErrorMessage,
+                onRetry: () => _initCamera(cameraIndex: _selectedCameraIndex),
+              ),
             ),
 
             // 2. Optional Translucent Overlay for High Contrast Text Readability
@@ -440,43 +467,37 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
             Column(
               children: [
                 // Top Header Bar
-                _buildHeaderBar(),
+                RecordHeader(
+                  title: widget.title ?? '',
+                  isRecording: _isRecording,
+                  recordingSeconds: _recordingSeconds,
+                  formattedDuration: _formatDuration(_recordingSeconds),
+                  cameraCount: _cameras.length,
+                  onToggleCamera: _toggleCamera,
+                ),
 
                 // Teleprompter Script Scroll Area
-                Expanded(
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 28,
-                      vertical: 40,
-                    ),
-                    child: Text(
-                      widget.script!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: _fontSize,
-                        height: 1.6,
-                        fontWeight: FontWeight.w600,
-                        shadows: const [
-                          Shadow(
-                            offset: Offset(0, 2),
-                            blurRadius: 8,
-                            color: Colors.black,
-                          ),
-                          Shadow(
-                            offset: Offset(0, 0),
-                            blurRadius: 4,
-                            color: Colors.black87,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                TeleprompterText(
+                  scrollController: _scrollController,
+                  script: widget.script!,
+                  fontSize: _fontSize,
                 ),
 
                 // Bottom Control Toolbar
-                _buildControlToolbar(),
+                RecordControls(
+                  fontSize: _fontSize,
+                  overlayOpacity: _overlayOpacity,
+                  scrollSpeed: _scrollSpeed,
+                  isScrolling: _isScrolling,
+                  isRecording: _isRecording,
+                  isRecordingProcessing: _isRecordingProcessing,
+                  isSavingVideo: _isSavingVideo,
+                  onToggleFontSize: _toggleFontSize,
+                  onToggleOverlayOpacity: _toggleOverlayOpacity,
+                  onToggleScrollSpeed: _toggleScrollSpeed,
+                  onToggleAutoScroll: _toggleAutoScroll,
+                  onToggleVideoRecording: _toggleVideoRecording,
+                ),
               ],
             ),
           ],
@@ -484,267 +505,5 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
       ),
     );
   }
-
-  Widget _buildCameraPreview() {
-    if (_isCameraInitializing) {
-      return const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(color: Colors.white),
-            SizedBox(height: 16),
-            Text(
-              'Starting camera...',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (_cameraErrorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.videocam_off, color: Colors.white70, size: 64),
-              const SizedBox(height: 16),
-              Text(
-                _cameraErrorMessage!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, fontSize: 16),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: () => _initCamera(cameraIndex: _selectedCameraIndex),
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry Camera'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_isCameraInitialized && _cameraController != null) {
-      final mediaSize = MediaQuery.of(context).size;
-      final cameraAspectRatio = _cameraController!.value.aspectRatio;
-
-      var scale = mediaSize.aspectRatio * cameraAspectRatio;
-      if (scale < 1) scale = 1 / scale;
-
-      return ClipRect(
-        child: SizedBox.expand(
-          child: Transform.scale(
-            scale: scale,
-            child: Center(
-              child: CameraPreview(_cameraController!),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Container(color: Colors.black);
-  }
-
-  Widget _buildHeaderBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.75),
-            Colors.transparent,
-          ],
-        ),
-      ),
-      child: Row(
-        children: [
-          // Script Title
-          Expanded(
-            child: Text(
-              widget.title ?? '',
-              textAlign: TextAlign.left,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-
-          // Recording Indicator Badge
-          if (_isRecording) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.fiber_manual_record,
-                      color: Colors.white, size: 12),
-                  const SizedBox(width: 4),
-                  Text(
-                    _formatDuration(_recordingSeconds),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-
-          // Camera Flip Switch Button
-          if (_cameras.length > 1)
-            IconButton(
-              icon: const Icon(Icons.flip_camera_ios, color: Colors.white),
-              tooltip: 'Switch Camera',
-              onPressed: _toggleCamera,
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildControlToolbar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.85),
-        border: const Border(
-          top: BorderSide(color: Colors.white12, width: 1),
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              // Font Size Adjustment
-              IconButton(
-                icon: const Icon(Icons.format_size, color: Colors.white),
-                tooltip: 'Font Size',
-                onPressed: () {
-                  setState(() {
-                    if (_fontSize >= 40.0) {
-                      _fontSize = 20.0;
-                    } else {
-                      _fontSize += 4.0;
-                    }
-                  });
-                },
-              ),
-
-              // Text Backdrop Contrast Dimmer
-              IconButton(
-                icon: Icon(
-                  _overlayOpacity == 0.0
-                      ? Icons.tonality_outlined
-                      : _overlayOpacity == 0.25
-                          ? Icons.tonality
-                          : Icons.brightness_medium,
-                  color: _overlayOpacity > 0.0 ? Colors.amber : Colors.white,
-                ),
-                tooltip:
-                    'Text Contrast Overlay (${(_overlayOpacity * 100).toInt()}%)',
-                onPressed: _toggleOverlayOpacity,
-              ),
-
-              // Scroll Speed Controller
-              InkWell(
-                onTap: () {
-                  setState(() {
-                    if (_scrollSpeed >= 70.0) {
-                      _scrollSpeed = 15.0;
-                    } else {
-                      _scrollSpeed += 15.0;
-                    }
-                  });
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    '${(_scrollSpeed / 15).toStringAsFixed(0)}x Speed',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Play / Pause Auto-Scroll Button
-              IconButton(
-                icon: Icon(
-                  _isScrolling
-                      ? Icons.pause_circle_filled
-                      : Icons.play_circle_fill,
-                  color: Colors.white,
-                  size: 36,
-                ),
-                tooltip: _isScrolling ? 'Pause Scroll' : 'Start Scroll',
-                onPressed: _toggleAutoScroll,
-              ),
-
-              // Record Video Shutter Button
-              GestureDetector(
-                onTap: _isRecordingProcessing ? null : _toggleVideoRecording,
-                child: Opacity(
-                  opacity: _isRecordingProcessing ? 0.6 : 1.0,
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3),
-                    ),
-                    child: Center(
-                      child: _isSavingVideo
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              width: _isRecording ? 18 : 28,
-                              height: _isRecording ? 18 : 28,
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                shape: _isRecording
-                                    ? BoxShape.rectangle
-                                    : BoxShape.circle,
-                                borderRadius: _isRecording
-                                    ? BorderRadius.circular(4)
-                                    : null,
-                              ),
-                            ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }
+
