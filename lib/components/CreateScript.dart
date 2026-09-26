@@ -76,6 +76,41 @@ class _CreatescriptState extends State<Createscript> {
             ],
           ),
         ),
+
+        actions: [
+          SizedBox(
+            height: 40,
+            width: 80,
+            child: IconButton(
+              onPressed: _isFormValid
+                  ? () {
+                      widget.onUseInRecording?.call(
+                        _titleController.text.trim(),
+                        _scriptController.text.trim(),
+                      );
+                    }
+                  : null,
+
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.green,
+                disabledBackgroundColor: _isFormValid
+                    ? Colors.green
+                    : Colors.grey.shade200,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100),
+                ),
+              ),
+
+              icon: Icon(
+                Icons.done,
+                size: 25,
+                color: _isFormValid ? Colors.white : Colors.grey.shade400,
+              ),
+              tooltip: 'Done',
+            ),
+          ),
+          SizedBox(width: 20),
+        ],
       ),
 
       body: Center(
