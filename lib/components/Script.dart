@@ -69,14 +69,28 @@ class Script extends StatelessWidget {
 
           Expanded(
             child: scripts.isEmpty
-                ? Center(
-                    child: Text(
-                      'No scripts yet',
-                      style: TextStyle(
-                        color: Colors.grey.shade500,
-                        fontSize: 16,
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        height: 200,
+                        width: 200,
+
+                        child: Image.asset(
+                          'lib/components/image/empty-folder-image.png',
+                        ),
                       ),
-                    ),
+
+                      Center(
+                        child: Text(
+                          'No scripts yet',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ],
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
