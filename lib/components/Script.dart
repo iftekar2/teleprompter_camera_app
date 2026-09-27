@@ -42,55 +42,97 @@ class Script extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Script',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: Colors.white,
-      ),
-
+      // appBar: AppBar(
+      //   title: const Text(
+      //     'Script',
+      //     style: TextStyle(fontWeight: FontWeight.w600),
+      //   ),
+      //   backgroundColor: Colors.white,
+      // ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-            child: SizedBox(
-              height: 60,
-              child: OutlinedButton(
-                onPressed: onNewScript,
-                child: const Text(
-                  '+ New Script',
-                  style: TextStyle(color: Colors.black, fontSize: 18),
-                ),
-              ),
-            ),
-          ),
-
+          // Padding(
+          //   padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+          //   child: SizedBox(
+          //     height: 60,
+          //     child: OutlinedButton(
+          //       onPressed: onNewScript,
+          //       child: const Text(
+          //         '+ New Script',
+          //         style: TextStyle(color: Colors.black, fontSize: 18),
+          //       ),
+          //     ),
+          //   ),
+          // ),
           Expanded(
             child: scripts.isEmpty
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        height: 200,
-                        width: 200,
+                ? Padding(
+                    padding: const EdgeInsets.only(left: 50, right: 50),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: 200,
+                          width: 200,
 
-                        child: Image.asset(
-                          'lib/components/image/empty-folder-image.png',
-                        ),
-                      ),
-
-                      Center(
-                        child: Text(
-                          'No scripts yet',
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 16,
+                          child: Image.asset(
+                            'lib/components/image/empty-folder-image.png',
                           ),
                         ),
-                      ),
-                    ],
+
+                        Text(
+                          'No scripts yet',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+
+                        SizedBox(height: 10),
+                        Text(
+                          "You don't have a script yet. Create one to get started!",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 18,
+                          ),
+                        ),
+
+                        SizedBox(height: 15),
+                        SizedBox(
+                          height: 55,
+                          width: 200,
+                          child: TextButton(
+                            onPressed: onNewScript,
+                            style: TextButton.styleFrom(
+                              backgroundColor: const Color.fromARGB(
+                                255,
+                                232,
+                                242,
+                                250,
+                              ),
+
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(10),
+                                ),
+                              ),
+                            ),
+
+                            child: Text(
+                              "+  Create Script",
+                              style: TextStyle(
+                                color: const Color.fromARGB(255, 0, 115, 255),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
