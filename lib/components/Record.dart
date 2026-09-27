@@ -472,6 +472,17 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
                     ),
                   ],
                 ),
+
+                SizedBox(height: 12),
+
+                Text(
+                  "You don't have any script yet. Create a script to start recording here.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 20),
+                ),
+
+                // SizedBox(height: 20),
+                // ElevatedButton(onPressed: () {}, child: Text("Create Script")),
               ],
             ),
           ),
