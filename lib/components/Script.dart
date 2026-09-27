@@ -134,79 +134,127 @@ class Script extends StatelessWidget {
                       ],
                     ),
                   )
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    itemCount: scripts.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final script = scripts[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 15),
-                        child: InkWell(
-                          onTap: () => onEdit(script),
-                          borderRadius: BorderRadius.circular(24),
+                : Scaffold(
+                    appBar: AppBar(
+                      backgroundColor: Colors.white,
+                      actions: [
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            right: 16.0,
+                            top: 8.0,
+                            bottom: 8.0,
+                          ),
 
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 16,
+                          child: OutlinedButton.icon(
+                            onPressed: onNewScript,
+                            icon: const Icon(
+                              Icons.add,
+                              color: Colors.black,
+                              size: 20,
                             ),
 
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: const Color.fromARGB(255, 129, 129, 129),
+                            label: const Text(
+                              'New Script',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
                               ),
-                              borderRadius: BorderRadius.circular(24),
                             ),
 
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        script.title,
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        script.content,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                const SizedBox(width: 12),
-
-                                // Right Action: Trash Icon
-                                IconButton(
-                                  onPressed: () =>
-                                      _confirmDelete(context, script),
-                                  icon: const Icon(Icons.delete_outline),
-                                  color: Colors.black,
-                                  tooltip: 'Delete',
-                                  iconSize: 30,
-                                ),
-                              ],
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.black),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                              ),
                             ),
                           ),
                         ),
-                      );
-                    },
+                      ],
+                    ),
+
+                    body: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      itemCount: scripts.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final script = scripts[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 15),
+                          child: InkWell(
+                            onTap: () => onEdit(script),
+                            borderRadius: BorderRadius.circular(24),
+
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 16,
+                              ),
+
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: const Color.fromARGB(
+                                    255,
+                                    129,
+                                    129,
+                                    129,
+                                  ),
+                                ),
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          script.title,
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          script.content,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 12),
+
+                                  // Right Action: Trash Icon
+                                  IconButton(
+                                    onPressed: () =>
+                                        _confirmDelete(context, script),
+                                    icon: const Icon(Icons.delete_outline),
+                                    color: Colors.black,
+                                    tooltip: 'Delete',
+                                    iconSize: 30,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
           ),
         ],
