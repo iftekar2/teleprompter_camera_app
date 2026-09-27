@@ -19,16 +19,81 @@ class Script extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete script?'),
-        content: Text('Delete "${script.title}"? This cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+        backgroundColor: Colors.white,
+        icon: Icon(Icons.error, size: 40, color: Colors.red),
+
+        title: const Text(
+          'Delete script',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontWeight: FontWeight.w500),
+        ),
+
+        content: Text.rich(
+          TextSpan(
+            style: const TextStyle(fontSize: 16, color: Colors.black),
+            children: [
+              const TextSpan(text: 'Are you sure you want to delete '),
+
+              TextSpan(
+                text: '"${script.title}"?',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+
+              TextSpan(text: " This action cannot be undone."),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          textAlign: TextAlign.center,
+        ),
+
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.all(
+                      const Color.fromARGB(255, 238, 238, 238),
+                    ),
+                    shape: WidgetStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    padding: WidgetStateProperty.all(
+                      const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.all(Colors.red),
+                    shape: WidgetStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    padding: WidgetStateProperty.all(
+                      const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                  child: const Text(
+                    'Delete',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -42,29 +107,9 @@ class Script extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: const Text(
-      //     'Script',
-      //     style: TextStyle(fontWeight: FontWeight.w600),
-      //   ),
-      //   backgroundColor: Colors.white,
-      // ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Padding(
-          //   padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-          //   child: SizedBox(
-          //     height: 60,
-          //     child: OutlinedButton(
-          //       onPressed: onNewScript,
-          //       child: const Text(
-          //         '+ New Script',
-          //         style: TextStyle(color: Colors.black, fontSize: 18),
-          //       ),
-          //     ),
-          //   ),
-          // ),
           Expanded(
             child: scripts.isEmpty
                 ? Padding(
@@ -239,7 +284,6 @@ class Script extends StatelessWidget {
 
                                   const SizedBox(width: 12),
 
-                                  // Right Action: Trash Icon
                                   IconButton(
                                     onPressed: () =>
                                         _confirmDelete(context, script),
