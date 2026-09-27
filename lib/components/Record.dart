@@ -28,7 +28,8 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
   Timer? _scrollTimer;
   double _scrollSpeed = 30.0; // pixels per second
   double _fontSize = 28.0;
-  double _overlayOpacity = 0.0; // 0.0 (clear unmasked camera), 0.25 (subtle), 0.5 (dark)
+  double _overlayOpacity =
+      0.0; // 0.0 (clear unmasked camera), 0.25 (subtle), 0.5 (dark)
 
   // Recording logic
   bool _isRecording = false;
@@ -56,7 +57,8 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
   void didUpdateWidget(Record oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (_hasScript &&
-        (oldWidget.title != widget.title || oldWidget.script != widget.script)) {
+        (oldWidget.title != widget.title ||
+            oldWidget.script != widget.script)) {
       if (!_isCameraInitialized && !_isCameraInitializing) {
         _initCamera();
       }
@@ -70,7 +72,8 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
       return;
     }
 
-    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
       _stopAutoScroll();
       _stopRecordingTimer();
 
@@ -262,14 +265,18 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
 
   Future<void> _toggleVideoRecording() async {
     final controller = _cameraController;
-    if (controller == null || !controller.value.isInitialized || _isRecordingProcessing) return;
+    if (controller == null ||
+        !controller.value.isInitialized ||
+        _isRecordingProcessing)
+      return;
 
     setState(() {
       _isRecordingProcessing = true;
     });
 
     try {
-      final isCurrentlyRecording = controller.value.isRecordingVideo || _isRecording;
+      final isCurrentlyRecording =
+          controller.value.isRecordingVideo || _isRecording;
 
       if (isCurrentlyRecording) {
         // Enforce a brief delay for very short recordings to avoid native camera driver errors
@@ -337,7 +344,9 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Video recorded, but failed to save to Photos: $e'),
+                  content: Text(
+                    'Video recorded, but failed to save to Photos: $e',
+                  ),
                   duration: const Duration(seconds: 5),
                   backgroundColor: Colors.orange,
                 ),
@@ -424,15 +433,46 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     if (!_hasScript) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: Colors.white,
         body: Center(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              'Create a script to start recording.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.black, fontSize: 18),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  height: 200,
+                  width: 200,
+
+                  child: Image.asset(
+                    'lib/components/image/welcome-page-image.jpg',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Welcome to',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.black, fontSize: 22),
+                    ),
+
+                    SizedBox(width: 7),
+                    Text(
+                      "PaceCam",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -506,4 +546,3 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
     );
   }
 }
-
