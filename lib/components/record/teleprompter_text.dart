@@ -17,10 +17,7 @@ class TeleprompterText extends StatelessWidget {
     return Expanded(
       child: SingleChildScrollView(
         controller: scrollController,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 28,
-          vertical: 40,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 500),
         child: Text(
           script,
           textAlign: TextAlign.center,
@@ -30,11 +27,7 @@ class TeleprompterText extends StatelessWidget {
             height: 1.6,
             fontWeight: FontWeight.w600,
             shadows: const [
-              Shadow(
-                offset: Offset(0, 2),
-                blurRadius: 8,
-                color: Colors.black,
-              ),
+              Shadow(offset: Offset(0, 2), blurRadius: 8, color: Colors.black),
               Shadow(
                 offset: Offset(0, 0),
                 blurRadius: 4,

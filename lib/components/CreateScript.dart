@@ -51,7 +51,7 @@ class _CreatescriptState extends State<Createscript> {
 
   @override
   Widget build(BuildContext context) {
-    final buttonColor = _isFormValid ? Colors.black : Colors.grey.shade400;
+    //final buttonColor = _isFormValid ? Colors.black : Colors.grey.shade400;
 
     return Scaffold(
       appBar: AppBar(
