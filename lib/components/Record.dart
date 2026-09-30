@@ -332,10 +332,37 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
             if (mounted) {
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('🎉 Video saved to your Photos!'),
+                SnackBar(
+                  content: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        "lib/components/image/successfull.jpg",
+                        height: 150,
+                        width: 150,
+                      ),
+
+                      const SizedBox(height: 12),
+                      const Text(
+                        "Successful",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 30,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+                      Text(
+                        "Your video is successfully saved in your phone!",
+                        style: TextStyle(color: Colors.black, fontSize: 20),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                   duration: Duration(seconds: 4),
-                  backgroundColor: Colors.green,
+                  backgroundColor: Colors.white,
                 ),
               );
             }
