@@ -178,39 +178,39 @@ class _CreatescriptState extends State<Createscript> {
                 ),
               ),
 
-              const SizedBox(height: 20),
-              SizedBox(
-                height: 60,
-                child: OutlinedButton(
-                  onPressed: _isFormValid
-                      ? () {
-                          widget.onUseInRecording?.call(
-                            _titleController.text.trim(),
-                            _scriptController.text.trim(),
-                          );
-                        }
-                      : null,
+              // const SizedBox(height: 20),
+              // SizedBox(
+              //   height: 60,
+              //   child: OutlinedButton(
+              //     onPressed: _isFormValid
+              //         ? () {
+              //             widget.onUseInRecording?.call(
+              //               _titleController.text.trim(),
+              //               _scriptController.text.trim(),
+              //             );
+              //           }
+              //         : null,
 
-                  child: Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.video_camera_front_outlined,
-                          size: 28,
-                          color: buttonColor,
-                        ),
+              //     child: Center(
+              //       child: Row(
+              //         mainAxisSize: MainAxisSize.min,
+              //         children: [
+              //           Icon(
+              //             Icons.video_camera_front_outlined,
+              //             size: 28,
+              //             color: buttonColor,
+              //           ),
 
-                        const SizedBox(width: 10),
-                        Text(
-                          "Use in recording",
-                          style: TextStyle(fontSize: 20, color: buttonColor),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              //           const SizedBox(width: 10),
+              //           Text(
+              //             "Use in recording",
+              //             style: TextStyle(fontSize: 20, color: buttonColor),
+              //           ),
+              //         ],
+              //       ),
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ),
