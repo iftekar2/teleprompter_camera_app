@@ -370,12 +370,44 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
             if (mounted) {
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
               ScaffoldMessenger.of(context).showSnackBar(
+                // SnackBar(
+                //   content: Text(
+                //     'Video recorded, but failed to save to Photos: $e',
+                //   ),
+                //   duration: const Duration(seconds: 5),
+                //   backgroundColor: Colors.orange,
+                // ),
                 SnackBar(
-                  content: Text(
-                    'Video recorded, but failed to save to Photos: $e',
+                  content: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        "ib/components/image/failed-to-save.png",
+                        height: 150,
+                        width: 150,
+                      ),
+
+                      const SizedBox(height: 12),
+                      const Text(
+                        "Failed to Save",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 30,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+                      Text(
+                        'Video recorded, but failed to save to Photos',
+                        style: TextStyle(color: Colors.black, fontSize: 20),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  duration: const Duration(seconds: 5),
-                  backgroundColor: Colors.orange,
+                  duration: Duration(seconds: 4),
+                  backgroundColor: Colors.white,
                 ),
               );
             }

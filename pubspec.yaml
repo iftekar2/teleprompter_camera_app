@@ -66,6 +66,7 @@ flutter:
     - lib/components/image/welcome-page-image.jpg
     - lib/components/image/empty-folder-image.png
     - lib/components/image/successfull.jpg
+    - lib/components/image/failed-to-save.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
