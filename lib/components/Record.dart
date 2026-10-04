@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:teleprompter_camera_app/components/record/record_components.dart';
 
 class Record extends StatefulWidget {
@@ -37,6 +41,7 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
   bool _isSavingVideo = false;
   int _recordingSeconds = 0;
   Timer? _recordingTimer;
+  final List<String> _recordedVideoSegments = [];
 
   @override
   void initState() {
@@ -189,7 +194,7 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
         await Future.delayed(const Duration(milliseconds: 500));
       }
 
-      // 2. Stop the current camera's recording segment
+      // 2. Stop current camera segment & add path to _recordedVideoSegments
       XFile? videoSegment;
       try {
         videoSegment = await controller.stopVideoRecording();
@@ -197,23 +202,8 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
         debugPrint('Error stopping video segment during camera flip: $e');
       }
 
-      // 3. Save completed video segment to Photos
       if (videoSegment != null) {
-        try {
-          await Gal.putVideo(videoSegment.path);
-          if (mounted) {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('📸 Video clip saved to Photos! Switching camera...'),
-                duration: Duration(seconds: 2),
-                backgroundColor: Colors.black87,
-              ),
-            );
-          }
-        } catch (e) {
-          debugPrint('Failed to save video segment to Photos: $e');
-        }
+        _recordedVideoSegments.add(videoSegment.path);
       }
 
       // 4. Dispose current camera controller
@@ -405,6 +395,10 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
           debugPrint('Error stopping video recording.');
         }
 
+        if (video != null) {
+          _recordedVideoSegments.add(video.path);
+        }
+
         _stopRecordingTimer();
         _stopAutoScroll();
 
@@ -414,9 +408,18 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
           });
         }
 
-        if (video != null) {
+        if (_recordedVideoSegments.isNotEmpty) {
+          String finalVideoPath = _recordedVideoSegments.last;
+
+          if (_recordedVideoSegments.length > 1) {
+            final mergedPath = await _mergeVideoSegments(_recordedVideoSegments);
+            if (mergedPath != null) {
+              finalVideoPath = mergedPath;
+            }
+          }
+
           try {
-            await Gal.putVideo(video.path);
+            await Gal.putVideo(finalVideoPath);
             if (mounted) {
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
               ScaffoldMessenger.of(context).showSnackBar(
@@ -458,20 +461,13 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
             if (mounted) {
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
               ScaffoldMessenger.of(context).showSnackBar(
-                // SnackBar(
-                //   content: Text(
-                //     'Video recorded, but failed to save to Photos: $e',
-                //   ),
-                //   duration: const Duration(seconds: 5),
-                //   backgroundColor: Colors.orange,
-                // ),
                 SnackBar(
                   content: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Image.asset(
-                        "ib/components/image/failed-to-save.png",
+                        "lib/components/image/failed-to-save.png",
                         height: 150,
                         width: 150,
                       ),
@@ -499,19 +495,12 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
                 ),
               );
             }
-          }
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Failed to stop recording cleanly.'),
-                duration: Duration(seconds: 4),
-              ),
-            );
+          } finally {
+            _cleanupTempSegments();
           }
         }
       } else {
+        _recordedVideoSegments.clear();
         await controller.startVideoRecording();
         if (mounted) {
           setState(() {
@@ -543,6 +532,63 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
         });
       }
     }
+  }
+
+  Future<String?> _mergeVideoSegments(List<String> paths) async {
+    if (paths.isEmpty) return null;
+    if (paths.length == 1) return paths.first;
+
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final concatListFile = File(
+        '${tempDir.path}/concat_list_${DateTime.now().millisecondsSinceEpoch}.txt',
+      );
+
+      final fileLines = paths.map((p) => "file '$p'").join('\n');
+      await concatListFile.writeAsString(fileLines);
+
+      final outputPath =
+          '${tempDir.path}/merged_${DateTime.now().millisecondsSinceEpoch}.mp4';
+
+      final session = await FFmpegKit.execute(
+        '-f concat -safe 0 -i "${concatListFile.path}" -c copy "$outputPath"',
+      );
+      final returnCode = await session.getReturnCode();
+
+      if (ReturnCode.isSuccess(returnCode) && File(outputPath).existsSync()) {
+        return outputPath;
+      }
+
+      final fallbackPath =
+          '${tempDir.path}/merged_fallback_${DateTime.now().millisecondsSinceEpoch}.mp4';
+      final fallbackSession = await FFmpegKit.execute(
+        '-f concat -safe 0 -i "${concatListFile.path}" -c:v libx264 -preset ultrafast -c:a aac "$fallbackPath"',
+      );
+      final fallbackReturnCode = await fallbackSession.getReturnCode();
+
+      if (ReturnCode.isSuccess(fallbackReturnCode) &&
+          File(fallbackPath).existsSync()) {
+        return fallbackPath;
+      }
+    } catch (e) {
+      debugPrint('Error merging video segments: $e');
+    }
+
+    return paths.last;
+  }
+
+  void _cleanupTempSegments() {
+    for (final path in _recordedVideoSegments) {
+      try {
+        final file = File(path);
+        if (file.existsSync()) {
+          file.deleteSync();
+        }
+      } catch (e) {
+        debugPrint('Error deleting temp segment: $e');
+      }
+    }
+    _recordedVideoSegments.clear();
   }
 
   void _startRecordingTimer() {

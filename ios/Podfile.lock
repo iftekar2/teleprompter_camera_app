@@ -1,34 +1,50 @@
 PODS:
   - camera_avfoundation (0.0.1):
     - Flutter
+  - ffmpeg_kit_flutter_new (8.1.2):
+    - ffmpeg_kit_flutter_new/full-gpl (= 8.1.2)
+    - Flutter
+  - ffmpeg_kit_flutter_new/full-gpl (8.1.2):
+    - Flutter
   - Flutter (1.0.0)
   - gal (1.0.0):
     - Flutter
     - FlutterMacOS
   - image_picker_ios (0.0.1):
     - Flutter
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
 
 DEPENDENCIES:
   - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
+  - ffmpeg_kit_flutter_new (from `.symlinks/plugins/ffmpeg_kit_flutter_new/ios`)
   - Flutter (from `Flutter`)
   - gal (from `.symlinks/plugins/gal/darwin`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
 
 EXTERNAL SOURCES:
   camera_avfoundation:
     :path: ".symlinks/plugins/camera_avfoundation/ios"
+  ffmpeg_kit_flutter_new:
+    :path: ".symlinks/plugins/ffmpeg_kit_flutter_new/ios"
   Flutter:
     :path: Flutter
   gal:
     :path: ".symlinks/plugins/gal/darwin"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
 
 SPEC CHECKSUMS:
   camera_avfoundation: 6841f9d1468415f905b3f5ea52ab1466ca506730
+  ffmpeg_kit_flutter_new: 8e5a0264340036d40065839eeba280efae216c47
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   gal: baecd024ebfd13c441269ca7404792a7152fde89
   image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
+  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
 
 PODFILE CHECKSUM: 757a12feb91a47635f0b49c223d2299361356ce3
 
