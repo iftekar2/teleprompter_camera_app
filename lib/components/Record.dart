@@ -156,7 +156,7 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
         await controller.setExposureMode(ExposureMode.auto);
       } catch (e) {
         // Some camera hardware might not support focus/exposure mode configuration
-        debugPrint('Focus/Exposure mode configuration warning');
+        debugPrint('Focus/Exposure mode configuration warning.');
       }
 
       if (!mounted) return;
@@ -169,7 +169,7 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
       if (!mounted) return;
       setState(() {
         _cameraErrorMessage =
-            "Unable to access camera. Please verify camera permissions in settings";
+            "Unable to access camera. Please verify camera permissions in settings.";
         _isCameraInitializing = false;
         _isCameraInitialized = false;
       });
@@ -177,12 +177,14 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
   }
 
   Future<void> _toggleCamera() async {
-    if (_cameras.length <= 1 || _isCameraInitializing || _isRecordingProcessing) return;
+    if (_cameras.length <= 1 || _isCameraInitializing || _isRecordingProcessing)
+      return;
     final nextIndex = (_selectedCameraIndex + 1) % _cameras.length;
 
     final controller = _cameraController;
     final isRecordingActive =
-        _isRecording || (controller != null && controller.value.isRecordingVideo);
+        _isRecording ||
+        (controller != null && controller.value.isRecordingVideo);
 
     if (isRecordingActive && controller != null) {
       setState(() {
@@ -199,7 +201,7 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
       try {
         videoSegment = await controller.stopVideoRecording();
       } catch (e) {
-        debugPrint('Error stopping video segment during camera flip: $e');
+        debugPrint('Error stopping video segment during camera flip.');
       }
 
       if (videoSegment != null) {
@@ -230,7 +232,7 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
             });
           }
         } catch (e) {
-          debugPrint('Error starting video recording on flipped camera: $e');
+          debugPrint('Error starting video recording on flipped camera.');
           _stopRecordingTimer();
           _stopAutoScroll();
           if (mounted) {
@@ -366,33 +368,35 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
           _isSavingVideo = true;
         });
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Row(
-                children: [
-                  SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Text('Saving video to Photos...'),
-                ],
-              ),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
+        // if (mounted) {
+        //   ScaffoldMessenger.of(context).showSnackBar(
+        //     const SnackBar(
+        //       content: Row(
+        //         children: [
+        //           SizedBox(
+        //             width: 16,
+        //             height: 16,
+        //             child: CircularProgressIndicator(
+        //               strokeWidth: 2,
+        //               color: Colors.white,
+        //             ),
+        //           ),
+        //           SizedBox(width: 12),
+        //           Text('Saving video to Photos...'),
+        //         ],
+        //       ),
+        //       duration: Duration(seconds: 2),
+        //     ),
+        //   );
+        // }
 
         XFile? video;
         try {
           video = await controller.stopVideoRecording();
         } catch (e) {
-          debugPrint('Error stopping video recording.');
+          debugPrint(
+            'Error stopping video recording. Please stop the app and reopen it.',
+          );
         }
 
         if (video != null) {
@@ -412,7 +416,9 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
           String finalVideoPath = _recordedVideoSegments.last;
 
           if (_recordedVideoSegments.length > 1) {
-            final mergedPath = await _mergeVideoSegments(_recordedVideoSegments);
+            final mergedPath = await _mergeVideoSegments(
+              _recordedVideoSegments,
+            );
             if (mergedPath != null) {
               finalVideoPath = mergedPath;
             }
@@ -484,7 +490,7 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
 
                       const SizedBox(height: 12),
                       Text(
-                        'Video recorded, but failed to save to Photos',
+                        'Video recorded, but failed to save to Photos. Please try again',
                         style: TextStyle(color: Colors.black, fontSize: 20),
                         textAlign: TextAlign.center,
                       ),
@@ -571,7 +577,7 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
         return fallbackPath;
       }
     } catch (e) {
-      debugPrint('Error merging video segments: $e');
+      debugPrint('Error merging video segments.');
     }
 
     return paths.last;
@@ -585,7 +591,7 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
           file.deleteSync();
         }
       } catch (e) {
-        debugPrint('Error deleting temp segment: $e');
+        debugPrint('Error deleting temp segment.');
       }
     }
     _recordedVideoSegments.clear();
