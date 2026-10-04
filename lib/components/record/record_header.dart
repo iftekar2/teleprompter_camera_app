@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class RecordHeader extends StatelessWidget {
   final String title;
   final bool isRecording;
+  final bool isRecordingProcessing;
   final int recordingSeconds;
   final String formattedDuration;
   final int cameraCount;
@@ -12,6 +13,7 @@ class RecordHeader extends StatelessWidget {
     super.key,
     required this.title,
     required this.isRecording,
+    this.isRecordingProcessing = false,
     required this.recordingSeconds,
     required this.formattedDuration,
     required this.cameraCount,
@@ -81,10 +83,13 @@ class RecordHeader extends StatelessWidget {
 
           // Camera Flip Switch Button
           if (cameraCount > 1)
-            IconButton(
-              icon: const Icon(Icons.flip_camera_ios, color: Colors.white),
-              tooltip: 'Switch Camera',
-              onPressed: onToggleCamera,
+            Opacity(
+              opacity: isRecordingProcessing ? 0.5 : 1.0,
+              child: IconButton(
+                icon: const Icon(Icons.flip_camera_ios, color: Colors.white),
+                tooltip: 'Switch Camera',
+                onPressed: isRecordingProcessing ? null : onToggleCamera,
+              ),
             ),
         ],
       ),

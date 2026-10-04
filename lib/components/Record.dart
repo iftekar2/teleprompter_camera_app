@@ -82,7 +82,7 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
           final video = await cameraController.stopVideoRecording();
           await Gal.putVideo(video.path);
         } catch (e) {
-          debugPrint('Failed to save recording on app pause: $e');
+          debugPrint('Failed to save recording on app pause.');
         }
       }
 
@@ -151,7 +151,7 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
         await controller.setExposureMode(ExposureMode.auto);
       } catch (e) {
         // Some camera hardware might not support focus/exposure mode configuration
-        debugPrint('Focus/Exposure mode configuration warning: $e');
+        debugPrint('Focus/Exposure mode configuration warning');
       }
 
       if (!mounted) return;
@@ -164,7 +164,7 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
       if (!mounted) return;
       setState(() {
         _cameraErrorMessage =
-            "Unable to access camera. Please verify camera permissions in settings.\n\n($e)";
+            "Unable to access camera. Please verify camera permissions in settings";
         _isCameraInitializing = false;
         _isCameraInitialized = false;
       });
@@ -172,16 +172,103 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
   }
 
   Future<void> _toggleCamera() async {
-    if (_cameras.length <= 1) return;
+    if (_cameras.length <= 1 || _isCameraInitializing || _isRecordingProcessing) return;
     final nextIndex = (_selectedCameraIndex + 1) % _cameras.length;
 
-    await _cameraController?.dispose();
-    _cameraController = null;
-    setState(() {
-      _isCameraInitialized = false;
-    });
+    final controller = _cameraController;
+    final isRecordingActive =
+        _isRecording || (controller != null && controller.value.isRecordingVideo);
 
-    await _initCamera(cameraIndex: nextIndex);
+    if (isRecordingActive && controller != null) {
+      setState(() {
+        _isRecordingProcessing = true;
+      });
+
+      // 1. Enforce delay for 0-second recordings to prevent driver issue
+      if (_recordingSeconds == 0) {
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+
+      // 2. Stop the current camera's recording segment
+      XFile? videoSegment;
+      try {
+        videoSegment = await controller.stopVideoRecording();
+      } catch (e) {
+        debugPrint('Error stopping video segment during camera flip: $e');
+      }
+
+      // 3. Save completed video segment to Photos
+      if (videoSegment != null) {
+        try {
+          await Gal.putVideo(videoSegment.path);
+          if (mounted) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('📸 Video clip saved to Photos! Switching camera...'),
+                duration: Duration(seconds: 2),
+                backgroundColor: Colors.black87,
+              ),
+            );
+          }
+        } catch (e) {
+          debugPrint('Failed to save video segment to Photos: $e');
+        }
+      }
+
+      // 4. Dispose current camera controller
+      await controller.dispose();
+      _cameraController = null;
+      if (mounted) {
+        setState(() {
+          _isCameraInitialized = false;
+        });
+      }
+
+      // 5. Initialize the flipped camera
+      await _initCamera(cameraIndex: nextIndex);
+
+      // 6. Resume video recording on the new camera
+      final newController = _cameraController;
+      if (newController != null && newController.value.isInitialized) {
+        try {
+          await newController.startVideoRecording();
+          if (mounted) {
+            setState(() {
+              _isRecording = true;
+              _isRecordingProcessing = false;
+            });
+          }
+        } catch (e) {
+          debugPrint('Error starting video recording on flipped camera: $e');
+          _stopRecordingTimer();
+          _stopAutoScroll();
+          if (mounted) {
+            setState(() {
+              _isRecording = false;
+              _isRecordingProcessing = false;
+            });
+          }
+        }
+      } else {
+        _stopRecordingTimer();
+        _stopAutoScroll();
+        if (mounted) {
+          setState(() {
+            _isRecording = false;
+            _isRecordingProcessing = false;
+          });
+        }
+      }
+    } else {
+      await controller?.dispose();
+      _cameraController = null;
+      setState(() {
+        _isCameraInitialized = false;
+      });
+
+      await _initCamera(cameraIndex: nextIndex);
+    }
   }
 
   void _toggleOverlayOpacity() {
@@ -267,8 +354,9 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
     final controller = _cameraController;
     if (controller == null ||
         !controller.value.isInitialized ||
-        _isRecordingProcessing)
+        _isRecordingProcessing) {
       return;
+    }
 
     setState(() {
       _isRecordingProcessing = true;
@@ -314,7 +402,7 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
         try {
           video = await controller.stopVideoRecording();
         } catch (e) {
-          debugPrint('Error stopping video recording: $e');
+          debugPrint('Error stopping video recording.');
         }
 
         _stopRecordingTimer();
@@ -440,9 +528,9 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to start recording: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to start recording.')));
       }
     } finally {
       if (mounted) {
@@ -580,6 +668,7 @@ class _RecordState extends State<Record> with WidgetsBindingObserver {
                 RecordHeader(
                   title: widget.title ?? '',
                   isRecording: _isRecording,
+                  isRecordingProcessing: _isRecordingProcessing,
                   recordingSeconds: _recordingSeconds,
                   formattedDuration: _formatDuration(_recordingSeconds),
                   cameraCount: _cameras.length,
